@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Expenses – BOT Cable</title>
+<link rel="icon" type="image/png" href="./images/favicon.png">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* ===========================
+   GitHub-like Glassmorphism
+   =========================== */
+:root{
+    --bg: #f6f8fa;
+    --panel: rgba(255,255,255,0.75);
+    --panel-border: rgba(27,31,36,0.06);
+    --muted: #57606a;
+    --text: #24292f;
+    --radius: 12px;
+    --shadow: 0 6px 18px rgba(140,149,159,0.12);
+    --blur: saturate(180%) blur(8px);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* NAV */
+.navbar{
+  position: sticky;
+  top:0;
+  z-index:40;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  backdrop-filter:var(--blur);
+  background:var(--panel);
+  border-bottom:1px solid var(--panel-border);
+  box-shadow:var(--shadow);
+}
+.nav-logo{height:36px}
+.nav-login{
+  padding:6px 10px;border-radius:8px;border:1px solid var(--panel-border);
+  background:rgba(255,255,255,0.5); cursor:pointer;
+}
+
+/* MAIN LAYOUT */
+.wrapper{
+  max-width:1400px;
+  margin:22px auto;
+  padding:0 20px;
+}
+
+/* Counters row */
+.counter-row{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(140px,1fr));
+  gap:16px;
+  margin-bottom:12px;
+}
+.counter-card{
+  padding:16px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--panel-border); box-shadow:var(--shadow);
+}
+.counter-title{ font-size:13px;color:var(--muted) }
+.counter-value{ font-size:28px;font-weight:700;margin-top:8px }
+
+/* Dashboard layout: aside + main */
+.dash-grid{
+  display:grid;
+  grid-template-columns: 320px 1fr;
+  gap:20px;
+  align-items:start;
+}
+
+/* ASIDE (sticky + scrollable) */
+.aside{
+  position:relative;
+}
+.aside-inner{
+  position:sticky;
+  top:20px;
+  min-height: calc(100vh - 40px);
+  overflow:visible;
+  padding:18px;
+  border-radius:12px;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  box-shadow:var(--shadow);
+}
+.aside h2{ margin:0 0 12px 0; font-size:18px }
+.aside .section{ margin-bottom:18px }
+.select, .input, .btn {
+  width:100%; padding:10px;border-radius:8px;border:1px solid var(--panel-border);
+  background:rgba(255,255,255,0.6);
+  font-size:14px;
+}
+.btn {
+  background:var(--text); color:white; border:none; cursor:pointer;
+}
+.muted{ color:var(--muted); font-size:13px }
+
+/* Sidebar stats like screenshot */
+.stat{
+  margin-top:14px;
+}
+.stat .big{ font-size:36px; font-weight:700; margin-top:6px }
+.stat .label{ color:var(--muted); margin-top:8px; font-size:13px }
+
+/* Main charts area: 2x2 grid + full width rows */
+.charts-area{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:20px;
+}
+.chart-card{
+  padding:18px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--panel-border); box-shadow:var(--shadow);
+  min-height:200px;
+}
+.chart-card h3{ margin:0 0 8px 0; font-size:16px }
+
+/* Full-width */
+.year-row{
+  grid-column: 1 / -1;
+}
+
+/* Summary + tables */
+.summary{
+  margin-top:20px;
+  padding:18px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--panel-border); box-shadow:var(--shadow);
+}
+.summary-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:12px }
+.summary-item{ padding:12px;border-radius:10px;background:#f8dd9a; text-align:center; font-weight:600 }
+
+/* Tables */
+.table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.table th, .table td{
+  padding:8px 6px;
+  border-bottom:1px solid var(--panel-border);
+  text-align:left;
+}
+.table th{
+  font-weight:600;
+  color:var(--muted);
+}
+.table-actions button{
+  font-size:11px;
+  padding:4px 6px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+}
+.table-actions .edit{ background:#3b82f6; color:white; }
+.table-actions .delete{ background:#ef4444; color:white; margin-left:4px; }
+.table-pagination{
+  margin-top:8px;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  font-size:12px;
+  color:var(--muted);
+}
+.table-pagination button{
+  border-radius:8px;
+  border:1px solid var(--panel-border);
+  padding:4px 8px;
+  background:rgba(255,255,255,0.7);
+  cursor:pointer;
+}
+.table-pagination span{
+  padding:4px 0;
+}
+
+/* Modal */
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.modal{
+  background:var(--panel);
+  border-radius:12px;
+  padding:18px;
+  border:1px solid var(--panel-border);
+  box-shadow:var(--shadow);
+  max-width:400px;
+  width:100%;
+}
+.modal h3{
+  margin-top:0;
+  margin-bottom:12px;
+}
+
+.cat-delete {
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: 0.15s ease;
+  color: #ef4444;
+}
+
+.cat-delete:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+
+/* Responsive */
+@media (max-width:1000px){
+  .dash-grid{ grid-template-columns: 1fr; }
+  .charts-area{ grid-template-columns: 1fr; }
+  .aside-inner{ position:relative; max-height:none; margin-bottom:16px }
+}
+
+/* scrollbar small */
+.aside-inner::-webkit-scrollbar{ width:10px }
+.aside-inner::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.06); border-radius:10px }
+
+/* small helpers */
+.row { display:flex; gap:8px; align-items:center }
+.small { font-size:13px; color:var(--muted) }
+.label-inline { width:110px; font-size:13px; color:var(--muted) }
+.input-inline { flex:1 }
+.amount-input{ font-weight:700 }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <img src="./images/logo.png" alt="logo" class="nav-logo">
+  <div class="nav-login" onclick="location.href='index.html'">🔐</div>
+</nav>
+
+<div class="wrapper">
+
+  <!-- COUNTERS -->
+  <div class="counter-row">
+    <div class="counter-card">
+      <div class="counter-title">Total expenses</div>
+      <div id="countTotal" class="counter-value">€0.00</div>
+    </div>
+    <div class="counter-card">
+      <div class="counter-title">Spent today</div>
+      <div id="countToday" class="counter-value">€0.00</div>
+    </div>
+    <div class="counter-card">
+      <div class="counter-title">Average / day</div>
+      <div id="avgPerDay" class="counter-value">€0.00</div>
+    </div>
+    <div class="counter-card">
+      <div class="counter-title">Highest day</div>
+      <div id="highestDay" class="counter-value">—</div>
+    </div>
+    <div class="counter-card">
+      <div class="counter-title">Total income</div>
+      <div id="countIncome" class="counter-value">€0.00</div>
+    </div>
+    <div class="counter-card">
+      <div class="counter-title">Net balance</div>
+      <div id="countNet" class="counter-value">€0.00</div>
+    </div>
+  </div>
+
+  <!-- DASH GRID: ASIDE + MAIN -->
+  <div class="dash-grid">
+
+    <!-- ASIDE -->
+    <aside class="aside">
+      <div class="aside-inner">
+        <h2>Add Expense</h2>
+
+        <div class="section">
+          <label class="muted">Amount</label>
+          <input id="inputAmount" class="input amount-input" type="number" step="0.01" placeholder="e.g. 12.50" />
+        </div>
+
+        <div class="section">
+          <label class="muted">Category</label>
+          <select id="inputCategory" class="select"></select>
+        </div>
+
+        <div class="section">
+          <label class="muted">Date</label>
+          <input id="inputDate" class="input" type="date" />
+        </div>
+
+        <div class="section">
+          <label class="muted">Note (optional)</label>
+          <input id="inputNote" class="input" placeholder="e.g. lunch" />
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button id="btnAdd" class="btn" style="flex:1">Add Expense</button>
+          <button id="btnClear" class="btn" style="flex:1; background:#6b7280">Clear All</button>
+        </div>
+
+        <hr style="margin:16px 0; border-color:var(--panel-border)" />
+
+        <!-- Add Income -->
+        <h2>Add Income</h2>
+
+        <div class="section">
+          <label class="muted">Amount</label>
+          <input id="incomeAmount" class="input amount-input" type="number" step="0.01" />
+        </div>
+
+        <div class="section">
+          <label class="muted">Date</label>
+          <input id="incomeDate" class="input" type="date" />
+        </div>
+
+        <button id="btnAddIncome" class="btn" style="width:100%; margin-top:10px">Add Income</button>
+
+        <hr style="margin:16px 0; border-color:var(--panel-border)" />
+
+        <!-- Filters -->
+        <h2>Filters</h2>
+        <div class="section">
+          <label class="muted">Time Range</label>
+          <select id="timeRange" class="select">
+            <option value="last7">Last 7 days</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last30">Last 30 days</option>
+            <option value="thisMonth">This month</option>
+            <option value="thisYear">This year</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+
+        <div class="section">
+          <label class="muted">Category</label>
+          <select id="filterCategory" class="select">
+            <!-- filled dynamically -->
+          </select>
+        </div>
+
+        <div class="section">
+          <label class="muted">Specific Date</label>
+          <input id="filterDate" class="input" type="date" />
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button id="applyFilters" class="btn" style="flex:1">Apply Filters</button>
+          <button id="resetFilters" class="btn" style="flex:1; background:#6b7280">Reset</button>
+        </div>
+
+        <hr style="margin:16px 0; border-color:var(--panel-border)" />
+
+        <!-- Category Management -->
+        <h2>Categories</h2>
+        <div class="section">
+          <input id="newCategory" class="input" placeholder="New category" />
+          <button id="btnAddCat" class="btn" style="margin-top:8px;">Add Category</button>
+        </div>
+        <div id="catList" class="section" style="max-height:200px; overflow:auto;"></div>
+
+        <hr style="margin:16px 0; border-color:var(--panel-border)" />
+
+        <!-- Import / Export -->
+        <h2>Data</h2>
+        <div class="section">
+          <button id="btnExport" class="btn" style="width:100%; margin-bottom:8px;">Export data</button>
+          <input id="importFile" type="file" accept="application/json" class="input" />
+          <button id="btnImport" class="btn" style="width:100%; margin-top:8px;">Import data</button>
+        </div>
+
+        <hr style="margin:16px 0; border-color:var(--panel-border)" />
+
+        <!-- Sidebar Stats -->
+        <div class="stat">
+          <div class="muted">Total transactions</div>
+          <div id="sideCount" class="big" style="font-size:30px; font-weight:700; margin-top:8px">0</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Total spent</div>
+          <div id="sideTotal" class="big" style="font-size:28px">€0.00</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Average / day</div>
+          <div id="sideAvg" class="big" style="font-size:28px">€0.00</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Longest streak (days)</div>
+          <div id="streakDays" class="big" style="font-size:28px">0</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <div class="charts-area">
+        <div class="chart-card">
+          <h3>Spending per day</h3>
+          <canvas id="chartDay"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Spending by category</h3>
+          <canvas id="chartCategory"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Spending per week</h3>
+          <canvas id="chartWeek"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Spending per month</h3>
+          <canvas id="chartMonth"></canvas>
+        </div>
+
+        <div class="chart-card year-row">
+          <h3>Spending per year (monthly totals)</h3>
+          <canvas id="chartYear"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Income per month</h3>
+          <canvas id="chartIncomeMonth"></canvas>
+        </div>
+
+        <div class="chart-card year-row">
+          <h3>Income vs Expenses (monthly)</h3>
+          <canvas id="chartIncomeVs"></canvas>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <section class="summary">
+        <h3>Spending by Type (summary)</h3>
+        <div class="summary-grid" id="summaryGrid"></div>
+      </section>
+
+      <!-- Expenses table -->
+      <section class="summary">
+        <h3>Expenses (details)</h3>
+        <div style="overflow:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="table-pagination">
+          <button id="expPrev">Prev</button>
+          <span id="expensesPageInfo"></span>
+          <button id="expNext">Next</button>
+        </div>
+      </section>
+
+      <!-- Income table -->
+      <section class="summary">
+        <h3>Income (details)</h3>
+        <div style="overflow:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="incomeTableBody"></tbody>
+          </table>
+        </div>
+        <div class="table-pagination">
+          <button id="incPrev">Prev</button>
+          <span id="incomePageInfo"></span>
+          <button id="incNext">Next</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div id="expenseModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Edit Expense</h3>
+    <div class="section">
+      <label class="muted">Amount</label>
+      <input id="editExpAmount" class="input" type="number" step="0.01">
+    </div>
+    <div class="section">
+      <label class="muted">Category</label>
+      <select id="editExpCategory" class="select"></select>
+    </div>
+    <div class="section">
+      <label class="muted">Date</label>
+      <input id="editExpDate" class="input" type="date">
+    </div>
+    <div class="section">
+      <label class="muted">Note</label>
+      <input id="editExpNote" class="input">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+      <button id="btnCancelExp" class="btn" style="background:#6b7280;">Cancel</button>
+      <button id="btnSaveExp" class="btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Income Modal -->
+<div id="incomeModal" class="modal-backdrop">
+  <div class="modal">
+    <h3>Edit Income</h3>
+    <div class="section">
+      <label class="muted">Amount</label>
+      <input id="editIncAmount" class="input" type="number" step="0.01">
+    </div>
+    <div class="section">
+      <label class="muted">Date</label>
+      <input id="editIncDate" class="input" type="date">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+      <button id="btnCancelInc" class="btn" style="background:#6b7280;">Cancel</button>
+      <button id="btnSaveInc" class="btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================================================
+   Expenses & Income Tracker
+   localStorage keys:
+   - expenses_v1
+   - incomes_v1
+   - expense_categories_v1
+   ====================================================== */
+
+const STORAGE_KEY = "expenses_v1";
+const INCOME_KEY  = "incomes_v1";
+const CAT_KEY     = "expense_categories_v1";
+
+const PAGE_SIZE = 10;
+
+// Chart instances
+let chartDay, chartCategory, chartWeek, chartMonth, chartYear;
+let chartIncomeMonth, chartIncomeVs;
+
+// pagination state
+let expensePage = 1;
+let incomePage = 1;
+let currentExpenses = [];
+let currentIncomes = [];
+
+// edit state
+let currentEditExpenseId = null;
+let currentEditIncomeId = null;
+
+// currency formatter — EUR
+const fmt = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+
+/* helpers */
+function toDate(d){ return d instanceof Date ? d : new Date(d); }
+
+/* Load & save EXPENSES with IDs */
+function loadExpenses(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(arr)) return [];
+    return arr.map(e => ({
+      ...e,
+      created: e.created || new Date().toISOString(),
+      id: e.id || ((e.created || Date.now()) + "_" + Math.random().toString(36).slice(2))
+    }));
+  }catch(e){
+    return [];
+  }
+}
+function saveExpenses(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+/* Load & save INCOME with IDs */
+function loadIncome(){
+  try{
+    const raw = localStorage.getItem(INCOME_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(arr)) return [];
+    return arr.map(e => ({
+      ...e,
+      created: e.created || new Date().toISOString(),
+      id: e.id || ((e.created || Date.now()) + "_" + Math.random().toString(36).slice(2))
+    }));
+  }catch(e){
+    return [];
+  }
+}
+function saveIncome(arr){
+  localStorage.setItem(INCOME_KEY, JSON.stringify(arr));
+}
+
+/* Categories */
+function loadCategories(){
+  const raw = localStorage.getItem(CAT_KEY);
+  if(raw){
+    try{
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr) && arr.length) return arr;
+    }catch(e){}
+  }
+  // default categories
+  return [
+    "Groceries","Food","Transport","Gaz / Electricity","Charges","Rent",
+    "Baby expenses","Subscriptions","Shopping","Health","Investment",
+    "Remboursment","Other"
+  ];
+}
+function saveCategories(list){
+  localStorage.setItem(CAT_KEY, JSON.stringify(list));
+}
+
+/* Render category options (add + filter + edit) */
+function renderCategoryOptions(){
+  const list = loadCategories();
+  const addSelect = document.getElementById("inputCategory");
+  const filterSelect = document.getElementById("filterCategory");
+
+  addSelect.innerHTML = "";
+  filterSelect.innerHTML = "<option value='all'>All</option>";
+
+  list.forEach(cat => {
+    const o1 = document.createElement("option");
+    o1.textContent = cat;
+    addSelect.appendChild(o1);
+
+    const o2 = document.createElement("option");
+    o2.textContent = cat;
+    o2.value = cat;
+    filterSelect.appendChild(o2);
+  });
+}
+
+function renderCategoryList(){
+  const box = document.getElementById("catList");
+  const list = loadCategories();
+  box.innerHTML = "";
+  list.forEach(cat => {
+    const div = document.createElement("div");
+    div.className = "row";
+    div.style.justifyContent = "space-between";
+    div.innerHTML = `
+  <span>${cat}</span>
+  <span class="cat-delete" data-cat="${cat}" title="Delete">
+    <!-- trash icon -->
+    🗑️
+  </span>
+`;
+
+    box.appendChild(div);
+  });
+  box.querySelectorAll(".cat-delete").forEach(icon => {
+  icon.onclick = () => deleteCategory(icon.dataset.cat);
+});
+
+}
+
+function deleteCategory(name){
+  if(!confirm("Delete category?")) return;
+  const list = loadCategories().filter(c => c !== name);
+  saveCategories(list);
+  renderCategoryOptions();
+  renderCategoryList();
+}
+
+/* ======================================================
+   Filters/time ranges
+   ====================================================== */
+function getTimeRangeValue(range){
+  const now = new Date();
+  switch(range){
+    case "today": {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { from: start, to: new Date(start.getTime() + 24*3600*1000) };
+    }
+    case "yesterday": {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      return { from: start, to: new Date(start.getTime() + 24*3600*1000) };
+    }
+    case "last7": {
+      const from = new Date(now.getTime() - 7*24*3600*1000);
+      return { from, to: now };
+    }
+    case "last30": {
+      const from = new Date(now.getTime() - 30*24*3600*1000);
+      return { from, to: now };
+    }
+    case "thisMonth": {
+      const from = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { from, to: now };
+    }
+    case "thisYear": {
+      const from = new Date(now.getFullYear(), 0, 1);
+      return { from, to: now };
+    }
+    default:
+      return null;
+  }
+}
+
+/* Apply filters to both expenses + income */
+function applyFilters(){
+  const range = document.getElementById("timeRange").value;
+  const category = document.getElementById("filterCategory").value;
+  const date = document.getElementById("filterDate").value;
+
+  let expenses = loadExpenses();
+  let incomes  = loadIncome();
+
+  const tr = getTimeRangeValue(range);
+  if(tr){
+    expenses = expenses.filter(n => {
+      const d = toDate(n.created);
+      return d >= tr.from && d <= tr.to;
+    });
+    incomes = incomes.filter(n => {
+      const d = toDate(n.created);
+      return d >= tr.from && d <= tr.to;
+    });
+  }
+
+  if(date){
+    expenses = expenses.filter(n => toDate(n.created).toISOString().slice(0,10) === date);
+    incomes = incomes.filter(n => toDate(n.created).toISOString().slice(0,10) === date);
+  }
+
+  if(category && category !== "all"){
+    expenses = expenses.filter(n => n.category === category);
+  }
+
+  currentExpenses = expenses;
+  currentIncomes  = incomes;
+  expensePage = 1;
+  incomePage  = 1;
+
+  renderAll(expenses, incomes);
+}
+
+/* Reset filters */
+function resetFilters(){
+  document.getElementById("timeRange").value = "last7";
+  document.getElementById("filterCategory").value = "all";
+  document.getElementById("filterDate").value = "";
+  applyFilters();
+}
+
+/* ======================================================
+   Stats
+   ====================================================== */
+function computeStats(expenses, incomes){
+  const totalAmount = expenses.reduce((s,e)=> s + Number(e.amount || 0), 0);
+  const totalCount = expenses.length;
+
+  const todayStr = new Date().toLocaleDateString();
+  const totalToday = expenses
+    .filter(n => toDate(n.created).toLocaleDateString() === todayStr)
+    .reduce((s,e)=> s + Number(e.amount || 0), 0);
+
+  // avg per day (expenses)
+  let avgPerDay = 0;
+  if(totalCount === 0) avgPerDay = 0;
+  else {
+    const dates = new Set(expenses.map(n => toDate(n.created).toISOString().slice(0,10)));
+    const days = dates.size || 1;
+    avgPerDay = +(totalAmount / days).toFixed(2);
+  }
+
+  // highest day
+  const dayMap = {};
+  expenses.forEach(n => {
+    const d = toDate(n.created).toISOString().slice(0,10);
+    dayMap[d] = (dayMap[d] || 0) + Number(n.amount || 0);
+  });
+  const sortedDays = Object.entries(dayMap).sort((a,b)=> b[1]-a[1]);
+  const highest = sortedDays.length ? `${sortedDays[0][0]} (${fmt.format(sortedDays[0][1])})` : "—";
+
+  // streak days: consecutive days up to today with at least one expense
+  const daySet = new Set(expenses.map(n => toDate(n.created).toISOString().slice(0,10)));
+  let streak = 0;
+  let d = new Date();
+  while(true){
+    const s = d.toISOString().slice(0,10);
+    if(daySet.has(s)){ streak++; d.setDate(d.getDate()-1) } else break;
+  }
+
+  // income + net balance
+  const incomeTotal = incomes.reduce((s,n)=> s + Number(n.amount || 0), 0);
+  const netBalance = incomeTotal - totalAmount;
+
+  return { totalAmount, totalCount, totalToday, avgPerDay, highest, streak, incomeTotal, netBalance };
+}
+
+/* ======================================================
+   Chart builders
+   ====================================================== */
+function destroyIfExists(chart){
+  try{ if(chart && typeof chart.destroy === 'function') chart.destroy(); }catch(e){}
+}
+
+/* Day: vertical bar (group by date) */
+function buildChartDay(data){
+  destroyIfExists(chartDay);
+  const map = {};
+  data.forEach(n=>{
+    const d = toDate(n.created).toLocaleDateString();
+    map[d] = (map[d] || 0) + Number(n.amount || 0);
+  });
+  const labels = Object.keys(map);
+  const values = Object.values(map);
+
+  const ctx = document.getElementById("chartDay").getContext("2d");
+  chartDay = new Chart(ctx, {
+    type: "bar",
+    data:{
+      labels,
+      datasets:[{
+        label:"Spending / day",
+        data: values,
+        backgroundColor: "rgba(99,102,241,0.9)",
+        borderRadius:6
+      }]
+    },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{callback: v => fmt.format(v) } }} }
+  });
+}
+
+/* Category: vertical bar (top categories by total amount) */
+function buildChartCategory(data){
+  destroyIfExists(chartCategory);
+  const map = {};
+  data.forEach(n => {
+    map[n.category] = (map[n.category] || 0) + Number(n.amount || 0);
+  });
+  const entries = Object.entries(map).sort((a,b)=> b[1]-a[1]);
+  const labels = entries.map(e=> e[0]);
+  const values = entries.map(e=> e[1]);
+
+  const ctx = document.getElementById("chartCategory").getContext("2d");
+  chartCategory = new Chart(ctx, {
+    type: "bar",
+    data:{
+      labels,
+      datasets:[{
+        label:"Spending by category",
+        data: values,
+        backgroundColor: "rgba(99,102,241,0.9)",
+        borderRadius:6
+      }]
+    },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{callback: v => fmt.format(v) } }} }
+  });
+}
+
+/* Week: polarArea (sum per weekday) */
+function buildChartWeek(data){
+  destroyIfExists(chartWeek);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const counts = Array(7).fill(0);
+  data.forEach(n => {
+    counts[toDate(n.created).getDay()] += Number(n.amount || 0);
+  });
+  const ctx = document.getElementById("chartWeek").getContext("2d");
+  chartWeek = new Chart(ctx, {
+    type: "polarArea",
+    data:{
+      labels: days,
+      datasets:[{
+        data: counts,
+        backgroundColor: [
+          "rgba(255,99,132,0.6)","rgba(54,162,235,0.6)","rgba(255,205,86,0.6)",
+          "rgba(75,192,192,0.6)","rgba(153,102,255,0.6)","rgba(255,159,64,0.6)","rgba(201,203,207,0.6)"
+        ]
+      }]
+    },
+    options:{ responsive:true, plugins:{legend:{position:'right'}} }
+  });
+}
+
+/* Month: horizontal bar (sum per month index) */
+function buildChartMonth(data){
+  destroyIfExists(chartMonth);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const counts = Array(12).fill(0);
+  data.forEach(n => counts[toDate(n.created).getMonth()] += Number(n.amount || 0));
+
+  const ctx = document.getElementById("chartMonth").getContext("2d");
+  chartMonth = new Chart(ctx, {
+    type: "bar",
+    data:{
+      labels: months,
+      datasets:[{
+        label:"Spending / month",
+        data: counts,
+        borderRadius:6,
+        barThickness:18
+      }]
+    },
+    options:{
+      indexAxis: 'y',
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{ x:{ beginAtZero:true, ticks:{ callback: v => fmt.format(v) } } }
+    }
+  });
+}
+
+/* Year: filled line of monthly totals (expenses) */
+function buildChartYear(data){
+  destroyIfExists(chartYear);
+  const monthLabels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthly = Array(12).fill(0);
+  data.forEach(n => monthly[toDate(n.created).getMonth()] += Number(n.amount || 0));
+
+  const ctx = document.getElementById("chartYear").getContext("2d");
+  chartYear = new Chart(ctx, {
+    type: "line",
+    data:{
+      labels: monthLabels,
+      datasets:[{
+        label:"Monthly totals",
+        data: monthly,
+        fill:true,
+        tension:0.35,
+        backgroundColor:"rgba(16,185,129,0.12)",
+        borderColor:"rgba(16,185,129,0.95)",
+        pointRadius:3
+      }]
+    },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{callback: v => fmt.format(v) } }} }
+  });
+}
+
+/* Income per month */
+function buildChartIncomeMonth(incomes){
+  destroyIfExists(chartIncomeMonth);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const counts = Array(12).fill(0);
+  incomes.forEach(n => counts[toDate(n.created).getMonth()] += Number(n.amount || 0));
+
+  const ctx = document.getElementById("chartIncomeMonth").getContext("2d");
+  chartIncomeMonth = new Chart(ctx, {
+    type: "bar",
+    data:{
+      labels: months,
+      datasets:[{
+        label:"Income / month",
+        data: counts,
+        borderRadius:6,
+        barThickness:18
+      }]
+    },
+    options:{
+      indexAxis: 'y',
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{ x:{ beginAtZero:true, ticks:{ callback: v => fmt.format(v) } } }
+    }
+  });
+}
+
+/* Income vs Expenses combined (monthly) */
+function buildChartIncomeVs(expenses, incomes){
+  destroyIfExists(chartIncomeVs);
+  const labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const expM = Array(12).fill(0);
+  const incM = Array(12).fill(0);
+
+  expenses.forEach(e => { expM[toDate(e.created).getMonth()] += Number(e.amount || 0); });
+  incomes.forEach(i => { incM[toDate(i.created).getMonth()] += Number(i.amount || 0); });
+
+  const ctx = document.getElementById("chartIncomeVs").getContext("2d");
+  chartIncomeVs = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        {
+          label:"Expenses",
+          data: expM,
+          tension:0.35,
+          fill:false,
+          borderColor:"rgba(248,113,113,0.95)",
+          pointRadius:3
+        },
+        {
+          label:"Income",
+          data: incM,
+          tension:0.35,
+          fill:false,
+          borderColor:"rgba(34,197,94,0.95)",
+          pointRadius:3
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:"top"}},
+      scales:{ y:{ beginAtZero:true, ticks:{ callback: v => fmt.format(v) } } }
+    }
+  });
+}
+
+/* Summary grid (category totals) */
+function buildSummaryGrid(data){
+  const box = document.getElementById("summaryGrid");
+  box.innerHTML = "";
+  const counts = {};
+  data.forEach(n => counts[n.category] = (counts[n.category] || 0) + Number(n.amount || 0) );
+  const entries = Object.entries(counts).sort((a,b)=> b[1]-a[1]);
+  if(entries.length === 0){
+    const el = document.createElement("div");
+    el.className = "summary-item";
+    el.textContent = "No expenses";
+    box.appendChild(el);
+    return;
+  }
+  entries.forEach(([t,c])=>{
+    const el = document.createElement("div");
+    el.className = "summary-item";
+    el.textContent = `${t}: ${fmt.format(c)}`;
+    box.appendChild(el);
+  });
+}
+
+/* ======================================================
+   Tables + pagination
+   ====================================================== */
+function renderExpenseTable(data){
+  const tbody = document.getElementById("expensesTableBody");
+  const info  = document.getElementById("expensesPageInfo");
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  if(expensePage > totalPages) expensePage = totalPages;
+  const start = (expensePage-1)*PAGE_SIZE;
+  const slice = data.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = "";
+  if(!slice.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" class="small">No expenses for selection.</td>`;
+    tbody.appendChild(tr);
+  } else {
+    slice.forEach(e => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${toDate(e.created).toLocaleDateString()}</td>
+        <td>${e.category || ""}</td>
+        <td>${fmt.format(e.amount || 0)}</td>
+        <td>${e.note || ""}</td>
+        <td class="table-actions">
+          <button class="edit" data-id="${e.id}">Edit</button>
+          <button class="delete" data-id="${e.id}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  info.textContent = `Page ${expensePage} / ${totalPages}`;
+
+  tbody.querySelectorAll("button.edit").forEach(btn => {
+    const id = btn.dataset.id;
+    btn.onclick = () => {
+      const item = currentExpenses.find(e => e.id === id);
+      if(item) openExpenseModal(item);
+    };
+  });
+  tbody.querySelectorAll("button.delete").forEach(btn => {
+    const id = btn.dataset.id;
+    btn.onclick = () => {
+      if(!confirm("Delete this expense?")) return;
+      const arr = loadExpenses().filter(e => e.id !== id);
+      saveExpenses(arr);
+      applyFilters();
+    };
+  });
+}
+
+function renderIncomeTable(data){
+  const tbody = document.getElementById("incomeTableBody");
+  const info  = document.getElementById("incomePageInfo");
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  if(incomePage > totalPages) incomePage = totalPages;
+  const start = (incomePage-1)*PAGE_SIZE;
+  const slice = data.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = "";
+  if(!slice.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="3" class="small">No income for selection.</td>`;
+    tbody.appendChild(tr);
+  } else {
+    slice.forEach(e => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${toDate(e.created).toLocaleDateString()}</td>
+        <td>${fmt.format(e.amount || 0)}</td>
+        <td class="table-actions">
+          <button class="edit" data-id="${e.id}">Edit</button>
+          <button class="delete" data-id="${e.id}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+  info.textContent = `Page ${incomePage} / ${totalPages}`;
+
+  tbody.querySelectorAll("button.edit").forEach(btn => {
+    const id = btn.dataset.id;
+    btn.onclick = () => {
+      const item = currentIncomes.find(e => e.id === id);
+      if(item) openIncomeModal(item);
+    };
+  });
+  tbody.querySelectorAll("button.delete").forEach(btn => {
+    const id = btn.dataset.id;
+    btn.onclick = () => {
+      if(!confirm("Delete this income?")) return;
+      const arr = loadIncome().filter(e => e.id !== id);
+      saveIncome(arr);
+      applyFilters();
+    };
+  });
+}
+
+/* ======================================================
+   Render everything
+   ====================================================== */
+function renderAll(expenses, incomes){
+  const s = computeStats(expenses, incomes);
+  document.getElementById("countTotal").textContent  = fmt.format(s.totalAmount);
+  document.getElementById("countToday").textContent  = fmt.format(s.totalToday);
+  document.getElementById("avgPerDay").textContent   = fmt.format(s.avgPerDay);
+  document.getElementById("highestDay").textContent  = s.highest;
+
+  document.getElementById("countIncome").textContent = fmt.format(s.incomeTotal);
+  document.getElementById("countNet").textContent    = fmt.format(s.netBalance);
+
+  document.getElementById("sideCount").textContent = s.totalCount;
+  document.getElementById("sideTotal").textContent = fmt.format(s.totalAmount);
+  document.getElementById("sideAvg").textContent   = fmt.format(s.avgPerDay);
+  document.getElementById("streakDays").textContent = s.streak;
+
+  // charts
+  buildChartDay(expenses);
+  buildChartCategory(expenses);
+  buildChartWeek(expenses);
+  buildChartMonth(expenses);
+  buildChartYear(expenses);
+  buildChartIncomeMonth(incomes);
+  buildChartIncomeVs(expenses, incomes);
+
+  // summary
+  buildSummaryGrid(expenses);
+
+  // tables
+  renderExpenseTable(expenses);
+  renderIncomeTable(incomes);
+}
+
+/* ======================================================
+   Add / Clear / Income logic
+   ====================================================== */
+function addExpenseFromForm(){
+  const amountEl = document.getElementById("inputAmount");
+  const catEl    = document.getElementById("inputCategory");
+  const dateEl   = document.getElementById("inputDate");
+  const noteEl   = document.getElementById("inputNote");
+
+  let amount = parseFloat(amountEl.value);
+  if(isNaN(amount) || amount <= 0){ alert("Please enter a valid amount."); return; }
+
+  const category = catEl.value || "Other";
+  const dateVal  = dateEl.value ? new Date(dateEl.value) : new Date();
+  const created  = new Date(dateVal.getFullYear(), dateVal.getMonth(), dateVal.getDate(), new Date().getHours(), new Date().getMinutes()).toISOString();
+  const note     = noteEl.value || "";
+
+  const arr = loadExpenses();
+  arr.push({
+    id: "exp_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+    amount: +amount.toFixed(2),
+    category,
+    created,
+    note
+  });
+  saveExpenses(arr);
+
+  amountEl.value = "";
+  noteEl.value   = "";
+  dateEl.value   = "";
+
+  applyFilters();
+}
+
+/* clear all expenses+income (danger) */
+function clearAll(){
+  if(!confirm("Clear ALL expenses and income? This cannot be undone.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(INCOME_KEY);
+  applyFilters();
+}
+
+/* Add income */
+function addIncomeFromForm(){
+  let amount = parseFloat(document.getElementById("incomeAmount").value);
+  if(isNaN(amount) || amount <= 0) return alert("Enter valid amount");
+
+  const d = document.getElementById("incomeDate").value 
+    ? new Date(document.getElementById("incomeDate").value)
+    : new Date();
+
+  const arr = loadIncome();
+  arr.push({
+    id: "inc_" + Date.now() + "_" + Math.random().toString(36).slice(2),
+    amount: +amount.toFixed(2),
+    created: d.toISOString()
+  });
+  saveIncome(arr);
+
+  document.getElementById("incomeAmount").value = "";
+  document.getElementById("incomeDate").value   = "";
+
+  applyFilters();
+}
+
+/* ======================================================
+   Edit modals
+   ====================================================== */
+function openExpenseModal(exp){
+  currentEditExpenseId = exp.id;
+  document.getElementById("editExpAmount").value  = exp.amount;
+  document.getElementById("editExpDate").value    = toDate(exp.created).toISOString().slice(0,10);
+  document.getElementById("editExpNote").value    = exp.note || "";
+
+  const sel = document.getElementById("editExpCategory");
+  const cats = loadCategories();
+  sel.innerHTML = "";
+  cats.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    if(c === exp.category) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  document.getElementById("expenseModal").style.display = "flex";
+}
+
+document.getElementById("btnCancelExp").onclick = () => {
+  document.getElementById("expenseModal").style.display = "none";
+  currentEditExpenseId = null;
+};
+document.getElementById("btnSaveExp").onclick = () => {
+  if(!currentEditExpenseId) return;
+  let amount = parseFloat(document.getElementById("editExpAmount").value);
+  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
+  const category = document.getElementById("editExpCategory").value || "Other";
+  const dateStr  = document.getElementById("editExpDate").value;
+  const note     = document.getElementById("editExpNote").value || "";
+  if(!dateStr){ alert("Select date"); return; }
+  const d = new Date(dateStr);
+
+  const arr = loadExpenses();
+  const idx = arr.findIndex(e => e.id === currentEditExpenseId);
+  if(idx !== -1){
+    arr[idx].amount  = +amount.toFixed(2);
+    arr[idx].category= category;
+    arr[idx].created = d.toISOString();
+    arr[idx].note    = note;
+    saveExpenses(arr);
+  }
+
+  document.getElementById("expenseModal").style.display = "none";
+  currentEditExpenseId = null;
+  applyFilters();
+};
+
+function openIncomeModal(inc){
+  currentEditIncomeId = inc.id;
+  document.getElementById("editIncAmount").value = inc.amount;
+  document.getElementById("editIncDate").value   = toDate(inc.created).toISOString().slice(0,10);
+  document.getElementById("incomeModal").style.display = "flex";
+}
+document.getElementById("btnCancelInc").onclick = () => {
+  document.getElementById("incomeModal").style.display = "none";
+  currentEditIncomeId = null;
+};
+document.getElementById("btnSaveInc").onclick = () => {
+  if(!currentEditIncomeId) return;
+  let amount = parseFloat(document.getElementById("editIncAmount").value);
+  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
+  const dateStr = document.getElementById("editIncDate").value;
+  if(!dateStr){ alert("Select date"); return; }
+  const d = new Date(dateStr);
+
+  const arr = loadIncome();
+  const idx = arr.findIndex(e => e.id === currentEditIncomeId);
+  if(idx !== -1){
+    arr[idx].amount  = +amount.toFixed(2);
+    arr[idx].created = d.toISOString();
+    saveIncome(arr);
+  }
+
+  document.getElementById("incomeModal").style.display = "none";
+  currentEditIncomeId = null;
+  applyFilters();
+};
+
+/* ======================================================
+   Import / Export
+   ====================================================== */
+function exportData(){
+  const data = {
+    expenses: loadExpenses(),
+    incomes:  loadIncome(),
+    categories: loadCategories()
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = "expenses_export_" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importDataFromFile(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const obj = JSON.parse(e.target.result);
+      if(!obj || typeof obj !== "object") throw new Error("bad");
+      if(Array.isArray(obj.expenses)) saveExpenses(obj.expenses);
+      if(Array.isArray(obj.incomes))  saveIncome(obj.incomes);
+      if(Array.isArray(obj.categories)) saveCategories(obj.categories);
+      renderCategoryOptions();
+      renderCategoryList();
+      applyFilters();
+      alert("Import successful");
+    }catch(err){
+      alert("Invalid file format.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ======================================================
+   Initialization
+   ====================================================== */
+document.getElementById("btnAdd").addEventListener("click", addExpenseFromForm);
+document.getElementById("btnClear").addEventListener("click", clearAll);
+document.getElementById("applyFilters").addEventListener("click", applyFilters);
+document.getElementById("resetFilters").addEventListener("click", resetFilters);
+
+document.getElementById("btnAddIncome").addEventListener("click", addIncomeFromForm);
+
+document.getElementById("btnExport").onclick = exportData;
+document.getElementById("btnImport").onclick = () => {
+  const fileInput = document.getElementById("importFile");
+  if(!fileInput.files.length) return alert("Choose a JSON file first.");
+  importDataFromFile(fileInput.files[0]);
+};
+
+// pagination buttons
+document.getElementById("expPrev").onclick = () => {
+  if(expensePage > 1){
+    expensePage--;
+    renderExpenseTable(currentExpenses);
+  }
+};
+document.getElementById("expNext").onclick = () => {
+  const totalPages = Math.max(1, Math.ceil(currentExpenses.length / PAGE_SIZE));
+  if(expensePage < totalPages){
+    expensePage++;
+    renderExpenseTable(currentExpenses);
+  }
+};
+document.getElementById("incPrev").onclick = () => {
+  if(incomePage > 1){
+    incomePage--;
+    renderIncomeTable(currentIncomes);
+  }
+};
+document.getElementById("incNext").onclick = () => {
+  const totalPages = Math.max(1, Math.ceil(currentIncomes.length / PAGE_SIZE));
+  if(incomePage < totalPages){
+    incomePage++;
+    renderIncomeTable(currentIncomes);
+  }
+};
+
+// initial defaults
+document.getElementById("timeRange").value = "last7";
+document.getElementById("inputDate").value = new Date().toISOString().slice(0,10);
+document.getElementById("incomeDate").value = new Date().toISOString().slice(0,10);
+
+// categories UI
+renderCategoryOptions();
+renderCategoryList();
+
+
+// No demo data — start clean always
+if (!Array.isArray(loadExpenses())) saveExpenses([]);
+if (!Array.isArray(loadIncome()))   saveIncome([]);
+
+
+// initial render
+applyFilters();
+</script>
+</body>
+</html>
