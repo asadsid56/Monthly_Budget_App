@@ -83,7 +83,7 @@ body{
   align-items:start;
 }
 
-/* ASIDE (sticky + scrollable) */
+/* ASIDE */
 .aside{
   position:relative;
 }
@@ -100,6 +100,8 @@ body{
 }
 .aside h2{ margin:0 0 12px 0; font-size:18px }
 .aside .section{ margin-bottom:18px }
+
+/* Form elements */
 .select, .input, .btn {
   width:100%; padding:10px;border-radius:8px;border:1px solid var(--panel-border);
   background:rgba(255,255,255,0.6);
@@ -110,12 +112,48 @@ body{
 }
 .muted{ color:var(--muted); font-size:13px }
 
-/* Sidebar stats like screenshot */
+/* Sidebar stats */
 .stat{
   margin-top:14px;
 }
 .stat .big{ font-size:36px; font-weight:700; margin-top:6px }
 .stat .label{ color:var(--muted); margin-top:8px; font-size:13px }
+
+/* Entry cards (Add Expense / Income in main) */
+.entry-grid{
+  display:grid;
+  grid-template-columns: 2fr 1.2fr;
+  gap:16px;
+  margin-bottom:18px;
+}
+.entry-card{
+  padding:16px;
+  border-radius:12px;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  box-shadow:var(--shadow);
+}
+.entry-card h2{
+  margin:0 0 10px 0;
+  font-size:18px;
+}
+
+/* Mobile tools (open bottom sheets) */
+.mobile-tools{
+  display:none;
+  margin:4px 0 12px;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.mobile-tools button{
+  flex:1 1 40%;
+  border-radius:999px;
+  border:1px solid var(--panel-border);
+  padding:6px 10px;
+  background:rgba(255,255,255,0.9);
+  font-size:13px;
+  cursor:pointer;
+}
 
 /* Main charts area: 2x2 grid + full width rows */
 .charts-area{
@@ -187,7 +225,7 @@ body{
   padding:4px 0;
 }
 
-/* Modal */
+/* Modal (centered edit modals) */
 .modal-backdrop{
   position:fixed;
   inset:0;
@@ -211,6 +249,7 @@ body{
   margin-bottom:12px;
 }
 
+/* Category delete icon */
 .cat-delete {
   cursor: pointer;
   font-size: 16px;
@@ -219,17 +258,156 @@ body{
   transition: 0.15s ease;
   color: #ef4444;
 }
-
 .cat-delete:hover {
   background: rgba(239, 68, 68, 0.12);
 }
 
+/* Bottom sheet modals (mobile filters/categories/data/stats) */
+.sheet-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,0.35);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:55;
+}
+.sheet-backdrop.sheet-open{
+  display:flex;
+}
+.sheet{
+  width:100%;
+  max-width:480px;
+  background:var(--panel);
+  border-radius:16px 16px 0 0;
+  border-top:1px solid var(--panel-border);
+  box-shadow:0 -10px 30px rgba(15,23,42,0.35);
+  transform:translateY(100%);
+  animation: sheetSlideUp 0.25s ease-out forwards;
+}
+@keyframes sheetSlideUp{
+  from{ transform:translateY(100%); }
+  to{ transform:translateY(0); }
+}
+.sheet-header{
+  padding:10px 16px 6px;
+}
+.sheet-header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.sheet-drag{
+  width:40px;
+  height:4px;
+  border-radius:999px;
+  background:rgba(148,163,184,0.8);
+  margin:0 auto 6px;
+}
+.sheet-header h3{
+  margin:0;
+  font-size:16px;
+}
+.sheet-close{
+  border:none;
+  background:transparent;
+  font-size:18px;
+  cursor:pointer;
+  padding:4px;
+  line-height:1;
+}
+.sheet-body{
+  padding:8px 16px 16px;
+  max-height:60vh;
+  overflow:auto;
+}
 
-/* Responsive */
+/* Floating action buttons */
+.fab{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  width:52px;
+  height:52px;
+  border-radius:999px;
+  border:none;
+  box-shadow:0 10px 25px rgba(15,23,42,0.35);
+  background:#111827;
+  color:#f9fafb;
+  font-size:24px;
+  display:none; /* default hidden, show on mobile below */
+  align-items:center;
+  justify-content:center;
+  z-index:60;
+}
+.fab-income{
+  bottom:78px; /* sit above expense FAB */
+  font-size:20px;
+}
+
+/* Mobile responsiveness */
 @media (max-width:1000px){
   .dash-grid{ grid-template-columns: 1fr; }
   .charts-area{ grid-template-columns: 1fr; }
   .aside-inner{ position:relative; max-height:none; margin-bottom:16px }
+}
+
+@media (max-width:768px){
+  .navbar{
+    padding:10px 14px;
+  }
+  .wrapper{
+    padding:0 12px;
+  }
+  .counter-row{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:12px;
+  }
+  .counter-card{
+    padding:12px;
+  }
+  .counter-value{
+    font-size:22px;
+  }
+  .entry-grid{
+    grid-template-columns: 1fr;
+  }
+  .chart-card{
+    padding:14px;
+  }
+  .summary{
+    padding:14px;
+    margin-top:14px;
+  }
+  .table th, .table td{
+    padding:6px 4px;
+    font-size:12px;
+  }
+  .aside-inner h2{
+    font-size:16px;
+  }
+  .input,
+  .select,
+  .btn{
+    font-size:13px;
+    padding:8px;
+  }
+  .fab{
+    display:flex; /* show FABs only on small screens */
+  }
+  .mobile-tools{
+    display:flex;
+  }
+  .aside{
+    display:none; /* hide sidebar on mobile, use bottom sheets instead */
+  }
+}
+
+/* Extra small screens: stack counters in 1 column */
+@media (max-width:480px){
+  .counter-row{
+    grid-template-columns: 1fr;
+  }
 }
 
 /* scrollbar small */
@@ -284,55 +462,9 @@ body{
   <!-- DASH GRID: ASIDE + MAIN -->
   <div class="dash-grid">
 
-    <!-- ASIDE -->
+    <!-- ASIDE (desktop only, hidden on mobile) -->
     <aside class="aside">
       <div class="aside-inner">
-        <h2>Add Expense</h2>
-
-        <div class="section">
-          <label class="muted">Amount</label>
-          <input id="inputAmount" class="input amount-input" type="number" step="0.01" placeholder="e.g. 12.50" />
-        </div>
-
-        <div class="section">
-          <label class="muted">Category</label>
-          <select id="inputCategory" class="select"></select>
-        </div>
-
-        <div class="section">
-          <label class="muted">Date</label>
-          <input id="inputDate" class="input" type="date" />
-        </div>
-
-        <div class="section">
-          <label class="muted">Note (optional)</label>
-          <input id="inputNote" class="input" placeholder="e.g. lunch" />
-        </div>
-
-        <div style="display:flex; gap:8px; margin-top:10px;">
-          <button id="btnAdd" class="btn" style="flex:1">Add Expense</button>
-          <button id="btnClear" class="btn" style="flex:1; background:#6b7280">Clear All</button>
-        </div>
-
-        <hr style="margin:16px 0; border-color:var(--panel-border)" />
-
-        <!-- Add Income -->
-        <h2>Add Income</h2>
-
-        <div class="section">
-          <label class="muted">Amount</label>
-          <input id="incomeAmount" class="input amount-input" type="number" step="0.01" />
-        </div>
-
-        <div class="section">
-          <label class="muted">Date</label>
-          <input id="incomeDate" class="input" type="date" />
-        </div>
-
-        <button id="btnAddIncome" class="btn" style="width:100%; margin-top:10px">Add Income</button>
-
-        <hr style="margin:16px 0; border-color:var(--panel-border)" />
-
         <!-- Filters -->
         <h2>Filters</h2>
         <div class="section">
@@ -412,6 +544,55 @@ body{
 
     <!-- MAIN -->
     <main>
+
+      <!-- Add Expense / Income (desktop + mobile) -->
+      <section class="entry-grid">
+        <div id="addExpenseBlock" class="entry-card">
+          <h2>Add Expense</h2>
+          <div class="section">
+            <label class="muted">Amount</label>
+            <input id="inputAmount" class="input amount-input" type="number" step="0.01" placeholder="e.g. 12.50" />
+          </div>
+          <div class="section">
+            <label class="muted">Category</label>
+            <select id="inputCategory" class="select"></select>
+          </div>
+          <div class="section">
+            <label class="muted">Date</label>
+            <input id="inputDate" class="input" type="date" />
+          </div>
+          <div class="section">
+            <label class="muted">Note (optional)</label>
+            <input id="inputNote" class="input" placeholder="e.g. lunch" />
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button id="btnAdd" class="btn" style="flex:1">Add Expense</button>
+            <button id="btnClear" class="btn" style="flex:1; background:#6b7280">Clear All</button>
+          </div>
+        </div>
+
+        <div id="addIncomeBlock" class="entry-card">
+          <h2>Add Income</h2>
+          <div class="section">
+            <label class="muted">Amount</label>
+            <input id="incomeAmount" class="input amount-input" type="number" step="0.01" />
+          </div>
+          <div class="section">
+            <label class="muted">Date</label>
+            <input id="incomeDate" class="input" type="date" />
+          </div>
+          <button id="btnAddIncome" class="btn" style="width:100%; margin-top:10px">Add Income</button>
+        </div>
+      </section>
+
+      <!-- Mobile tools: open bottom sheets -->
+      <div class="mobile-tools">
+        <button data-sheet="sheetFilters">Filters</button>
+        <button data-sheet="sheetCategories">Categories</button>
+        <button data-sheet="sheetData">Data</button>
+        <button data-sheet="sheetStats">Stats</button>
+      </div>
+
       <div class="charts-area">
         <div class="chart-card">
           <h3>Spending per day</h3>
@@ -438,7 +619,7 @@ body{
           <canvas id="chartYear"></canvas>
         </div>
 
-        <div class="chart-card">
+        <div class="chart-card year-row">
           <h3>Income per month</h3>
           <canvas id="chartIncomeMonth"></canvas>
         </div>
@@ -505,6 +686,116 @@ body{
   </div>
 </div>
 
+<!-- Bottom sheet: Filters (mobile) -->
+<div class="sheet-backdrop" id="sheetFilters">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-drag"></div>
+      <div class="sheet-header-top">
+        <h3>Filters</h3>
+        <button class="sheet-close" data-sheet-close="sheetFilters">✕</button>
+      </div>
+    </div>
+    <div class="sheet-body">
+      <div class="section">
+        <label class="muted">Time Range</label>
+        <select id="timeRangeMobile" class="select">
+          <option value="last7">Last 7 days</option>
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last30">Last 30 days</option>
+          <option value="thisMonth">This month</option>
+          <option value="thisYear">This year</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
+      <div class="section">
+        <label class="muted">Category</label>
+        <select id="filterCategoryMobile" class="select"></select>
+      </div>
+      <div class="section">
+        <label class="muted">Specific Date</label>
+        <input id="filterDateMobile" class="input" type="date" />
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button id="applyFiltersMobile" class="btn" style="flex:1">Apply</button>
+        <button id="resetFiltersMobile" class="btn" style="flex:1; background:#6b7280">Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom sheet: Categories (mobile) -->
+<div class="sheet-backdrop" id="sheetCategories">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-drag"></div>
+      <div class="sheet-header-top">
+        <h3>Categories</h3>
+        <button class="sheet-close" data-sheet-close="sheetCategories">✕</button>
+      </div>
+    </div>
+    <div class="sheet-body">
+      <div class="section">
+        <input id="newCategoryMobile" class="input" placeholder="New category" />
+        <button id="btnAddCatMobile" class="btn" style="margin-top:8px;">Add Category</button>
+      </div>
+      <div id="catListMobile" class="section" style="max-height:260px; overflow:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom sheet: Data (mobile) -->
+<div class="sheet-backdrop" id="sheetData">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-drag"></div>
+      <div class="sheet-header-top">
+        <h3>Data</h3>
+        <button class="sheet-close" data-sheet-close="sheetData">✕</button>
+      </div>
+    </div>
+    <div class="sheet-body">
+      <div class="section">
+        <button id="btnExportMobile" class="btn" style="width:100%; margin-bottom:8px;">Export data</button>
+        <input id="importFileMobile" type="file" accept="application/json" class="input" />
+        <button id="btnImportMobile" class="btn" style="width:100%; margin-top:8px;">Import data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom sheet: Stats (mobile) -->
+<div class="sheet-backdrop" id="sheetStats">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-drag"></div>
+      <div class="sheet-header-top">
+        <h3>Stats</h3>
+        <button class="sheet-close" data-sheet-close="sheetStats">✕</button>
+      </div>
+    </div>
+    <div class="sheet-body">
+      <div class="stat">
+        <div class="muted">Total transactions</div>
+        <div id="sideCountMobile" class="big" style="font-size:30px; font-weight:700; margin-top:8px">0</div>
+      </div>
+      <div class="stat">
+        <div class="muted">Total spent</div>
+        <div id="sideTotalMobile" class="big" style="font-size:28px">€0.00</div>
+      </div>
+      <div class="stat">
+        <div class="muted">Average / day</div>
+        <div id="sideAvgMobile" class="big" style="font-size:28px">€0.00</div>
+      </div>
+      <div class="stat">
+        <div class="muted">Longest streak (days)</div>
+        <div id="streakDaysMobile" class="big" style="font-size:28px">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Edit Expense Modal -->
 <div id="expenseModal" class="modal-backdrop">
   <div class="modal">
@@ -550,6 +841,10 @@ body{
     </div>
   </div>
 </div>
+
+<!-- Floating action buttons (mobile only) -->
+<button id="fabExpense" class="fab fab-expense" title="Add expense">＋</button>
+<button id="fabIncome" class="fab fab-income" title="Add income">€</button>
 
 <script>
 /* ======================================================
@@ -644,49 +939,83 @@ function saveCategories(list){
   localStorage.setItem(CAT_KEY, JSON.stringify(list));
 }
 
-/* Render category options (add + filter + edit) */
+/* Render category options (add + filters) */
 function renderCategoryOptions(){
   const list = loadCategories();
+
   const addSelect = document.getElementById("inputCategory");
   const filterSelect = document.getElementById("filterCategory");
+  const filterSelectMobile = document.getElementById("filterCategoryMobile");
 
-  addSelect.innerHTML = "";
-  filterSelect.innerHTML = "<option value='all'>All</option>";
+  if(addSelect){
+    addSelect.innerHTML = "";
+  }
+  if(filterSelect){
+    filterSelect.innerHTML = "<option value='all'>All</option>";
+  }
+  if(filterSelectMobile){
+    filterSelectMobile.innerHTML = "<option value='all'>All</option>";
+  }
 
   list.forEach(cat => {
-    const o1 = document.createElement("option");
-    o1.textContent = cat;
-    addSelect.appendChild(o1);
-
-    const o2 = document.createElement("option");
-    o2.textContent = cat;
-    o2.value = cat;
-    filterSelect.appendChild(o2);
+    if(addSelect){
+      const o1 = document.createElement("option");
+      o1.textContent = cat;
+      addSelect.appendChild(o1);
+    }
+    if(filterSelect){
+      const o2 = document.createElement("option");
+      o2.textContent = cat;
+      o2.value = cat;
+      filterSelect.appendChild(o2);
+    }
+    if(filterSelectMobile){
+      const o3 = document.createElement("option");
+      o3.textContent = cat;
+      o3.value = cat;
+      filterSelectMobile.appendChild(o3);
+    }
   });
 }
 
 function renderCategoryList(){
   const box = document.getElementById("catList");
+  const boxMobile = document.getElementById("catListMobile");
   const list = loadCategories();
-  box.innerHTML = "";
-  list.forEach(cat => {
-    const div = document.createElement("div");
-    div.className = "row";
-    div.style.justifyContent = "space-between";
-    div.innerHTML = `
-  <span>${cat}</span>
-  <span class="cat-delete" data-cat="${cat}" title="Delete">
-    <!-- trash icon -->
-    🗑️
-  </span>
-`;
 
-    box.appendChild(div);
-  });
-  box.querySelectorAll(".cat-delete").forEach(icon => {
-  icon.onclick = () => deleteCategory(icon.dataset.cat);
-});
+  if(box){
+    box.innerHTML = "";
+    list.forEach(cat => {
+      const div = document.createElement("div");
+      div.className = "row";
+      div.style.justifyContent = "space-between";
+      div.innerHTML = `
+        <span>${cat}</span>
+        <span class="cat-delete" data-cat="${cat}" title="Delete">🗑️</span>
+      `;
+      box.appendChild(div);
+    });
+    box.querySelectorAll(".cat-delete").forEach(icon => {
+      icon.onclick = () => deleteCategory(icon.dataset.cat);
+    });
+  }
 
+  if(boxMobile){
+    boxMobile.innerHTML = "";
+    list.forEach(cat => {
+      const div = document.createElement("div");
+      div.className = "row";
+      div.style.justifyContent = "space-between";
+      div.innerHTML = `
+        <span>${cat}</span>
+        <span class="cat-delete" data-cat="${cat}" title="Delete">🗑️</span>
+      `;
+      boxMobile.appendChild(div);
+    });
+    boxMobile.querySelectorAll(".cat-delete").forEach(icon => {
+      icon.onclick = () => deleteCategory(icon.dataset.cat);
+    });
+  }
 }
 
 function deleteCategory(name){
@@ -695,6 +1024,25 @@ function deleteCategory(name){
   saveCategories(list);
   renderCategoryOptions();
   renderCategoryList();
+}
+
+/* Add category helper used by desktop + mobile */
+function addCategory(name){
+  const trimmed = (name || "").trim();
+  if(!trimmed){
+    alert("Enter a category name.");
+    return false;
+  }
+  const list = loadCategories();
+  if(list.includes(trimmed)){
+    alert("Category already exists.");
+    return false;
+  }
+  list.push(trimmed);
+  saveCategories(list);
+  renderCategoryOptions();
+  renderCategoryList();
+  return true;
 }
 
 /* ======================================================
@@ -732,11 +1080,15 @@ function getTimeRangeValue(range){
   }
 }
 
-/* Apply filters to both expenses + income */
+/* Apply filters to both expenses + income (desktop controls) */
 function applyFilters(){
-  const range = document.getElementById("timeRange").value;
-  const category = document.getElementById("filterCategory").value;
-  const date = document.getElementById("filterDate").value;
+  const rangeEl = document.getElementById("timeRange");
+  const catEl = document.getElementById("filterCategory");
+  const dateEl = document.getElementById("filterDate");
+
+  const range = rangeEl ? rangeEl.value : "last7";
+  const category = catEl ? catEl.value : "all";
+  const date = dateEl ? dateEl.value : "";
 
   let expenses = loadExpenses();
   let incomes  = loadIncome();
@@ -770,11 +1122,56 @@ function applyFilters(){
   renderAll(expenses, incomes);
 }
 
-/* Reset filters */
+/* Apply filters from mobile bottom sheet */
+function applyFiltersFromMobile(){
+  const rangeM = document.getElementById("timeRangeMobile");
+  const catM   = document.getElementById("filterCategoryMobile");
+  const dateM  = document.getElementById("filterDateMobile");
+
+  const rangeEl = document.getElementById("timeRange");
+  const catEl   = document.getElementById("filterCategory");
+  const dateEl  = document.getElementById("filterDate");
+
+  if(rangeEl && rangeM) rangeEl.value = rangeM.value;
+  if(catEl && catM) catEl.value = catM.value;
+  if(dateEl && dateM) dateEl.value = dateM.value;
+
+  applyFilters();
+  closeSheet("sheetFilters");
+}
+
+/* Reset filters (desktop) */
 function resetFilters(){
-  document.getElementById("timeRange").value = "last7";
-  document.getElementById("filterCategory").value = "all";
-  document.getElementById("filterDate").value = "";
+  const rangeEl = document.getElementById("timeRange");
+  const catEl = document.getElementById("filterCategory");
+  const dateEl = document.getElementById("filterDate");
+
+  if(rangeEl) rangeEl.value = "last7";
+  if(catEl) catEl.value = "all";
+  if(dateEl) dateEl.value = "";
+
+  applyFilters();
+}
+
+/* Reset filters (mobile) */
+function resetFiltersFromMobile(){
+  const rangeM = document.getElementById("timeRangeMobile");
+  const catM   = document.getElementById("filterCategoryMobile");
+  const dateM  = document.getElementById("filterDateMobile");
+
+  if(rangeM) rangeM.value = "last7";
+  if(catM)   catM.value = "all";
+  if(dateM)  dateM.value = "";
+
+  // sync to desktop then apply
+  const rangeEl = document.getElementById("timeRange");
+  const catEl   = document.getElementById("filterCategory");
+  const dateEl  = document.getElementById("filterDate");
+
+  if(rangeEl && rangeM) rangeEl.value = rangeM.value;
+  if(catEl && catM) catEl.value = catM.value;
+  if(dateEl && dateM) dateEl.value = dateM.value;
+
   applyFilters();
 }
 
@@ -1168,10 +1565,25 @@ function renderAll(expenses, incomes){
   document.getElementById("countIncome").textContent = fmt.format(s.incomeTotal);
   document.getElementById("countNet").textContent    = fmt.format(s.netBalance);
 
-  document.getElementById("sideCount").textContent = s.totalCount;
-  document.getElementById("sideTotal").textContent = fmt.format(s.totalAmount);
-  document.getElementById("sideAvg").textContent   = fmt.format(s.avgPerDay);
-  document.getElementById("streakDays").textContent = s.streak;
+  const sideCount = document.getElementById("sideCount");
+  const sideTotal = document.getElementById("sideTotal");
+  const sideAvg   = document.getElementById("sideAvg");
+  const streakEl  = document.getElementById("streakDays");
+
+  if(sideCount) sideCount.textContent = s.totalCount;
+  if(sideTotal) sideTotal.textContent = fmt.format(s.totalAmount);
+  if(sideAvg)   sideAvg.textContent   = fmt.format(s.avgPerDay);
+  if(streakEl)  streakEl.textContent  = s.streak;
+
+  const sideCountM = document.getElementById("sideCountMobile");
+  const sideTotalM = document.getElementById("sideTotalMobile");
+  const sideAvgM   = document.getElementById("sideAvgMobile");
+  const streakM    = document.getElementById("streakDaysMobile");
+
+  if(sideCountM) sideCountM.textContent = s.totalCount;
+  if(sideTotalM) sideTotalM.textContent = fmt.format(s.totalAmount);
+  if(sideAvgM)   sideAvgM.textContent   = fmt.format(s.avgPerDay);
+  if(streakM)    streakM.textContent    = s.streak;
 
   // charts
   buildChartDay(expenses);
@@ -1278,65 +1690,26 @@ function openExpenseModal(exp){
   document.getElementById("expenseModal").style.display = "flex";
 }
 
-document.getElementById("btnCancelExp").onclick = () => {
-  document.getElementById("expenseModal").style.display = "none";
-  currentEditExpenseId = null;
-};
-document.getElementById("btnSaveExp").onclick = () => {
-  if(!currentEditExpenseId) return;
-  let amount = parseFloat(document.getElementById("editExpAmount").value);
-  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
-  const category = document.getElementById("editExpCategory").value || "Other";
-  const dateStr  = document.getElementById("editExpDate").value;
-  const note     = document.getElementById("editExpNote").value || "";
-  if(!dateStr){ alert("Select date"); return; }
-  const d = new Date(dateStr);
-
-  const arr = loadExpenses();
-  const idx = arr.findIndex(e => e.id === currentEditExpenseId);
-  if(idx !== -1){
-    arr[idx].amount  = +amount.toFixed(2);
-    arr[idx].category= category;
-    arr[idx].created = d.toISOString();
-    arr[idx].note    = note;
-    saveExpenses(arr);
-  }
-
-  document.getElementById("expenseModal").style.display = "none";
-  currentEditExpenseId = null;
-  applyFilters();
-};
-
 function openIncomeModal(inc){
   currentEditIncomeId = inc.id;
   document.getElementById("editIncAmount").value = inc.amount;
   document.getElementById("editIncDate").value   = toDate(inc.created).toISOString().slice(0,10);
   document.getElementById("incomeModal").style.display = "flex";
 }
-document.getElementById("btnCancelInc").onclick = () => {
-  document.getElementById("incomeModal").style.display = "none";
-  currentEditIncomeId = null;
-};
-document.getElementById("btnSaveInc").onclick = () => {
-  if(!currentEditIncomeId) return;
-  let amount = parseFloat(document.getElementById("editIncAmount").value);
-  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
-  const dateStr = document.getElementById("editIncDate").value;
-  if(!dateStr){ alert("Select date"); return; }
-  const d = new Date(dateStr);
 
-  const arr = loadIncome();
-  const idx = arr.findIndex(e => e.id === currentEditIncomeId);
-  if(idx !== -1){
-    arr[idx].amount  = +amount.toFixed(2);
-    arr[idx].created = d.toISOString();
-    saveIncome(arr);
-  }
-
-  document.getElementById("incomeModal").style.display = "none";
-  currentEditIncomeId = null;
-  applyFilters();
-};
+/* ======================================================
+   Bottom sheet helpers
+   ====================================================== */
+function openSheet(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add("sheet-open");
+}
+function closeSheet(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove("sheet-open");
+}
 
 /* ======================================================
    Import / Export
@@ -1379,18 +1752,58 @@ function importDataFromFile(file){
 }
 
 /* ======================================================
-   Initialization
+   Initialization & Event Listeners
    ====================================================== */
+
+// main buttons
 document.getElementById("btnAdd").addEventListener("click", addExpenseFromForm);
 document.getElementById("btnClear").addEventListener("click", clearAll);
-document.getElementById("applyFilters").addEventListener("click", applyFilters);
-document.getElementById("resetFilters").addEventListener("click", resetFilters);
-
 document.getElementById("btnAddIncome").addEventListener("click", addIncomeFromForm);
 
-document.getElementById("btnExport").onclick = exportData;
-document.getElementById("btnImport").onclick = () => {
+// desktop filters
+const applyFiltersBtn = document.getElementById("applyFilters");
+if(applyFiltersBtn) applyFiltersBtn.addEventListener("click", applyFilters);
+const resetFiltersBtn = document.getElementById("resetFilters");
+if(resetFiltersBtn) resetFiltersBtn.addEventListener("click", resetFilters);
+
+// mobile filters
+const applyFiltersMobileBtn = document.getElementById("applyFiltersMobile");
+if(applyFiltersMobileBtn) applyFiltersMobileBtn.addEventListener("click", applyFiltersFromMobile);
+const resetFiltersMobileBtn = document.getElementById("resetFiltersMobile");
+if(resetFiltersMobileBtn) resetFiltersMobileBtn.addEventListener("click", resetFiltersFromMobile);
+
+// categories add
+const btnAddCat = document.getElementById("btnAddCat");
+if(btnAddCat){
+  btnAddCat.onclick = () => {
+    const input = document.getElementById("newCategory");
+    if(addCategory(input.value)) input.value = "";
+  };
+}
+const btnAddCatMobile = document.getElementById("btnAddCatMobile");
+if(btnAddCatMobile){
+  btnAddCatMobile.onclick = () => {
+    const input = document.getElementById("newCategoryMobile");
+    if(addCategory(input.value)) input.value = "";
+  };
+}
+
+// export/import desktop
+const btnExport = document.getElementById("btnExport");
+if(btnExport) btnExport.onclick = exportData;
+const btnImport = document.getElementById("btnImport");
+if(btnImport) btnImport.onclick = () => {
   const fileInput = document.getElementById("importFile");
+  if(!fileInput.files.length) return alert("Choose a JSON file first.");
+  importDataFromFile(fileInput.files[0]);
+};
+
+// export/import mobile
+const btnExportMobile = document.getElementById("btnExportMobile");
+if(btnExportMobile) btnExportMobile.onclick = exportData;
+const btnImportMobile = document.getElementById("btnImportMobile");
+if(btnImportMobile) btnImportMobile.onclick = () => {
+  const fileInput = document.getElementById("importFileMobile");
   if(!fileInput.files.length) return alert("Choose a JSON file first.");
   importDataFromFile(fileInput.files[0]);
 };
@@ -1423,20 +1836,128 @@ document.getElementById("incNext").onclick = () => {
   }
 };
 
+// edit modals close/save
+document.getElementById("btnCancelExp").onclick = () => {
+  document.getElementById("expenseModal").style.display = "none";
+  currentEditExpenseId = null;
+};
+document.getElementById("btnSaveExp").onclick = () => {
+  if(!currentEditExpenseId) return;
+  let amount = parseFloat(document.getElementById("editExpAmount").value);
+  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
+  const category = document.getElementById("editExpCategory").value || "Other";
+  const dateStr  = document.getElementById("editExpDate").value;
+  const note     = document.getElementById("editExpNote").value || "";
+  if(!dateStr){ alert("Select date"); return; }
+  const d = new Date(dateStr);
+
+  const arr = loadExpenses();
+  const idx = arr.findIndex(e => e.id === currentEditExpenseId);
+  if(idx !== -1){
+    arr[idx].amount  = +amount.toFixed(2);
+    arr[idx].category= category;
+    arr[idx].created = d.toISOString();
+    arr[idx].note    = note;
+    saveExpenses(arr);
+  }
+
+  document.getElementById("expenseModal").style.display = "none";
+  currentEditExpenseId = null;
+  applyFilters();
+};
+
+document.getElementById("btnCancelInc").onclick = () => {
+  document.getElementById("incomeModal").style.display = "none";
+  currentEditIncomeId = null;
+};
+document.getElementById("btnSaveInc").onclick = () => {
+  if(!currentEditIncomeId) return;
+  let amount = parseFloat(document.getElementById("editIncAmount").value);
+  if(isNaN(amount) || amount <= 0){ alert("Enter valid amount"); return; }
+  const dateStr = document.getElementById("editIncDate").value;
+  if(!dateStr){ alert("Select date"); return; }
+  const d = new Date(dateStr);
+
+  const arr = loadIncome();
+  const idx = arr.findIndex(e => e.id === currentEditIncomeId);
+  if(idx !== -1){
+    arr[idx].amount  = +amount.toFixed(2);
+    arr[idx].created = d.toISOString();
+    saveIncome(arr);
+  }
+
+  document.getElementById("incomeModal").style.display = "none";
+  currentEditIncomeId = null;
+  applyFilters();
+};
+
+// FAB buttons: scroll to blocks on mobile
+const fabExp = document.getElementById("fabExpense");
+const fabInc = document.getElementById("fabIncome");
+
+if (fabExp) {
+  fabExp.onclick = () => {
+    const block = document.getElementById("addExpenseBlock");
+    if (block) {
+      block.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        const inp = document.getElementById("inputAmount");
+        if (inp) inp.focus();
+      }, 400);
+    }
+  };
+}
+
+if (fabInc) {
+  fabInc.onclick = () => {
+    const block = document.getElementById("addIncomeBlock");
+    if (block) {
+      block.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        const inp = document.getElementById("incomeAmount");
+        if (inp) inp.focus();
+      }, 400);
+    }
+  };
+}
+
+// bottom sheet open/close bindings
+document.querySelectorAll("[data-sheet]").forEach(btn => {
+  btn.addEventListener("click", () => openSheet(btn.dataset.sheet));
+});
+document.querySelectorAll(".sheet-backdrop").forEach(backdrop => {
+  backdrop.addEventListener("click", e => {
+    if(e.target === backdrop){
+      backdrop.classList.remove("sheet-open");
+    }
+  });
+});
+document.querySelectorAll(".sheet-close").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id = btn.getAttribute("data-sheet-close");
+    if(id) closeSheet(id);
+  });
+});
+
 // initial defaults
-document.getElementById("timeRange").value = "last7";
-document.getElementById("inputDate").value = new Date().toISOString().slice(0,10);
-document.getElementById("incomeDate").value = new Date().toISOString().slice(0,10);
+const trEl = document.getElementById("timeRange");
+if(trEl) trEl.value = "last7";
+const trMob = document.getElementById("timeRangeMobile");
+if(trMob) trMob.value = "last7";
+
+const todayStr = new Date().toISOString().slice(0,10);
+const inputDateEl = document.getElementById("inputDate");
+if(inputDateEl) inputDateEl.value = todayStr;
+const incomeDateEl = document.getElementById("incomeDate");
+if(incomeDateEl) incomeDateEl.value = todayStr;
 
 // categories UI
 renderCategoryOptions();
 renderCategoryList();
 
-
 // No demo data — start clean always
 if (!Array.isArray(loadExpenses())) saveExpenses([]);
 if (!Array.isArray(loadIncome()))   saveIncome([]);
-
 
 // initial render
 applyFilters();
